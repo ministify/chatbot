@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Responses Chatbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* Full viewport height */
+            width: 100vw;  /* Full viewport width */
+            overflow: hidden; /* Prevent scrollbars on the body */
+            display: flex;
+            flex-direction: column; /* Stack chatbot elements vertically */
+        }
+
+        .chatbot-container {
+            /* Removed fixed positioning */
+            position: static; /* Default positioning */
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            display: flex; /*  Use flexbox for layout */
+            flex-direction: column;  /* Stack elements vertically */
+        }
+
+        .chatbot {
+            width: 100%; /* Occupy full width */
+            height: 100%; /* Occupy full height of container */
+            max-width: none; /* Remove max-width constraints */
+            max-height: none; /* Remove max-height constraints*/
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Hide overflow, especially important for chat-display*/
+            border-radius: 0; /* No rounded corners */
+            box-shadow: none; /* Remove the shadow for a cleaner look */
+
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, white 0%, orange 150%);
+            color: orange;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;  /* Prevent header from shrinking */
+        }
+
+        .chat-display {
+            flex: 1; /* Grow to fill available space */
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            /* Important: Add scrollbar styling for consistency */
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #888 #f5f5f5; /* Firefox */
+        }
+        /* For WebKit (Chrome, Safari) */
+        .chat-display::-webkit-scrollbar {
+            width: 8px; /*  Set the width */
+        }
+        .chat-display::-webkit-scrollbar-track {
+            background: #f5f5f5; /* Track color */
+        }
+        .chat-display::-webkit-scrollbar-thumb {
+            background-color: #888; /* Thumb color */
+            border-radius: 4px; /* Round the thumb */
+            border: 2px solid #f5f5f5; /* Give it a border that matches the track */
+        }
+        .chat-display::-webkit-scrollbar-thumb:hover {
+            background-color: #555;  /* Darker on hover */
+        }
+
+
+        .chat-display p {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            max-width: 100%;  /* Keep messages from being full-width */
+            word-wrap: break-word;
+            line-height: 1.4;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, lightgreen 0%, white 100%);
+            color: black;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background: linear-gradient(135deg, white 0%, rgb(250, 216, 155) 150%);
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        .typing-indicator {
+             display: inline-block;
+            background-color: #E0E0E0;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border-bottom-left-radius: 5px;
+            font-style: italic;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-container {
+          background: linear-gradient(135deg, lightgreen 0%, white 100%);
+          padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0; /* Prevent input container from shrinking */
+        }
+
+        .chat-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            border: none;
+            background-color: #f5f5f5;
+            padding: 12px 15px;
+            border-radius: 20px;
+            font-size: 1em;
+            outline: none;
+            box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input button {
+            background-color: rgb(138, 194, 138);
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            white-space: nowrap; /* Prevent buttons from wrapping */
+
+        }
+
+        .chat-input button:hover {
+            background-color: rgb(41, 132, 56);
+            transform: translateY(-2px);
+        }
+
+        .chat-input .clear-chat {
+            background-color: #d79ba1;
+        }
+
+        .chat-input .clear-chat:hover {
+            background-color: #a94c55;
+        }
+
+        .button-options {
+            display: flex;
+            flex-wrap: wrap; /* Allows buttons to wrap to the next line */
+            justify-content: space-between; /* Space out buttons */
+            gap: 10px;
+        }
+
+        .button-options button {
+           flex-basis: calc(10% - 5px); /* Two buttons per row, accounting for gap */
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+            background-color: #c9e2cf;
+            color: #726a6a;
+            white-space: nowrap; /* Prevent buttons from wrapping */
+        }
+
+        .button-options button:hover {
+            background-color: #eff8f1;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="chatbot" id="chatbot">
+            <div class="chatbot-header">
+                <span id="chatbot-name"><b>CDO CITY</b></span>
+            </div>
+            <div class="chat-display" id="chatDisplay"></div>
+            <div class="chat-input-container">
+                <div class="button-options" id="buttonOptions"></div>
+                <div class="chat-input">
+                    <input type="text" id="userInput" placeholder="Type your message...">
+                    <button onclick="sendMessage()">➤</button>
+                    <button class="clear-chat" onclick="clearChat()">✖</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+       const chatbot = document.getElementById('chatbot');
+        const chatDisplay = document.getElementById('chatDisplay');
+        const buttonOptions = document.getElementById('buttonOptions');
+        const userInput = document.getElementById('userInput');
+
+        // Audio elements for sound effects
+        const messageReceivedSound = new Audio('https://www.fesliyanstudios.com/play-mp3/5455');
+
+        // Predefined responses with multiple possible replies
+        const predefinedResponses = [
+          {
+            pattern: /hello|hi|hey/i,
+            responses: ["Hi there! I'm HashBro. Your Christian Chatbot Assistant. How can I help you today?", "Hello! I'm HashBro. What can I do for you today?", "Hey! How may I assist you?"],
+            suggestions: ["Button 1", "Button 2", "Button 3", "Button 4"]
+          },
+          {
+            pattern: /work|ministry|offer/i,
+            responses: ["I teach Bible base from my decades of experience.", "I preach from the King James Bible only.", "Me and my students preached more often in the streets of Cagayan De Oro City."],
+            suggestions: ["Tell me more about yourself.", "What is IBMP?"]
+          },
+          {
+            pattern: /help|contact|support/i,
+            responses: ["You can reach us at support@example.com.", "Feel free to email us at support@example.com.", "Contact us anytime at support@example.com."],
+            suggestions: ["Back to main menu", "Tell me about your services"]
+          },
+          {
+            pattern: /do|doing|you/i,
+            responses: ["I'm a Bible Teacher with vast amount of experience.", "I'm a Preacher by vocation.", "A streetpreacher for many years."],
+            suggestions: ["Where did you graduate?", "You know Peter S. Ruckman?"]
+          },
+          {
+            pattern: /bye|exit|goodbye/i,
+            responses: ["Goodbye! Have a great day!", "See you soon! Take care!", "Bye! Let me know if you need anything else."],
+            suggestions: ["No, thanks.", "Would let you know."]
+          }
+        ];
+
+        let idleTimer;
+        const idleTime = 100000;
+
+        function resetIdleTimer() {
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(sendIdleMessage, idleTime);
+        }
+
+        function sendIdleMessage() {
+          const idleMessages = [
+            "Are you still there? Do you need any assistance?",
+            "It's been a while. Can I help you with anything?",
+            "I'm here if you need me. Just type your question."
+          ];
+          const randomMessage = idleMessages[Math.floor(Math.random() * idleMessages.length)];
+          addMessage(randomMessage, 'bot');
+          updateButtonOptions(["Yes, I need help", "No, I'm good"]);
+        }
+
+        function addMessage(message, type) {
+          const messageElement = document.createElement('p');
+          messageElement.className = type === 'user' ? 'user-message' : 'bot-message';
+
+          if (type === 'bot') {
+            const typingIndicator = document.createElement('span');
+            typingIndicator.classList.add('typing-indicator');
+            typingIndicator.textContent = 'Typing...';
+            messageElement.appendChild(typingIndicator);
+            chatDisplay.appendChild(messageElement);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            simulateTyping(messageElement, message, typingIndicator);
+          } else {
+            messageElement.textContent = message;
+            chatDisplay.appendChild(messageElement);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+          }
+        }
+        function simulateTyping(messageElement, message, typingIndicator) {
+        let i = 0;
+        const typingSpeed = 50;
+
+        function type() {
+            if (i < message.length) {
+                if (typingIndicator) {
+                    messageElement.removeChild(typingIndicator);
+                    typingIndicator = null;
+                }
+
+                messageElement.textContent += message.charAt(i);
+                i++;
+                setTimeout(type, typingSpeed);
+            } else {
+                if (typingIndicator) {
+                    messageElement.removeChild(typingIndicator); // Remove the indicator
+                }
+                messageReceivedSound.play();
+            }
+        }
+
+        setTimeout(type, 1000);
+    }
+        function matchResponse(userText) {
+          for (const { pattern, responses, suggestions } of predefinedResponses) {
+            if (pattern.test(userText)) {
+              const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+              return { response: randomResponse, suggestions };
+            }
+          }
+          return { response: "I'm sorry, I didn't understand that.", suggestions: ["Help", "Main menu"] };
+        }
+
+        function updateButtonOptions(suggestions) {
+          buttonOptions.innerHTML = '';
+          suggestions.forEach(suggestion => {
+            const button = document.createElement('button');
+            button.textContent = suggestion;
+            button.onclick = () => handleButtonClick(suggestion);
+            buttonOptions.appendChild(button);
+          });
+        }
+
+        function processQuery(message) {
+          const cleanedMessage = message.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
+          const responseDelay = Math.random() * 2000 + 500;
+
+          setTimeout(() => {
+            const { response, suggestions } = matchResponse(cleanedMessage);
+            addMessage(response, 'bot');
+            updateButtonOptions(suggestions);
+          }, responseDelay);
+        }
+
+        function sendMessage() {
+          const message = userInput.value.trim();
+          if (message) {
+            addMessage(message, 'user');
+            userInput.value = '';
+            processQuery(message);
+            resetIdleTimer();
+          }
+        }
+
+        function handleButtonClick(suggestion) {
+          addMessage(suggestion, 'user');
+          processQuery(suggestion);
+          resetIdleTimer();
+        }
+
+
+
+        function clearChat() {
+          while (chatDisplay.firstChild) {
+            chatDisplay.removeChild(chatDisplay.firstChild);
+          }
+          processQuery("hello");
+          resetIdleTimer();
+        }
+
+        document.addEventListener('mousemove', resetIdleTimer);
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        processQuery("hello");
+        resetIdleTimer();
+    </script>
+</body>
+</html>
+        

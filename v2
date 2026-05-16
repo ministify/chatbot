@@ -1,0 +1,500 @@
+<!-- Start of HashBro Business Concierge Widget -->
+<div id="hb-widget-wrapper">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+    /* 1. Reset inherited styles */
+    #hb-widget-wrapper { all: initial; font-family: 'Inter', sans-serif; font-size: 15px; z-index: 2147483647; position: relative; }
+    #hb-widget-wrapper * { box-sizing: border-box; font-family: inherit; }
+
+    /* 2. Theme Variables - Modern Tech Palette */
+    #hb-widget-wrapper {
+        --bg-chatbot: #ffffff; 
+        --bg-header: linear-gradient(135deg, #0f172a, #1e293b); 
+        --text-header: #ffffff; 
+        --bg-chat-display: #f8fafc; 
+        --bg-user-message: #0f172a; 
+        --text-user-message: #ffffff; 
+        --bg-bot-message: #ffffff; 
+        --text-bot-message: #334155; 
+        --bg-input-container: #ffffff; 
+        --border-color: #e2e8f0; 
+        --bg-input: #f1f5f9; 
+        --text-input: #0f172a; 
+        --bg-send-button: #0f172a; 
+        --text-send-button: #ffffff; 
+        --bg-send-button-hover: #334155; 
+        --bg-option-button: #f1f5f9; 
+        --text-option-button: #0f172a; 
+        --bg-option-button-hover: #e2e8f0; 
+        --shadow-soft: 0 8px 16px -4px rgba(0, 0, 0, 0.05); 
+        --shadow-chatbot: 0 25px 50px -12px rgba(0, 0, 0, 0.15); 
+        --minimized-icon-color: #ffffff; 
+        --minimized-bg: #0f172a; 
+    }
+
+    #hb-widget-wrapper.hb-dark-mode {
+        --bg-chatbot: #0f172a; 
+        --bg-header: linear-gradient(135deg, #020617, #0f172a); 
+        --text-header: #f8fafc; 
+        --bg-chat-display: #020617; 
+        --bg-user-message: #3b82f6; 
+        --text-user-message: #ffffff; 
+        --bg-bot-message: #1e293b; 
+        --text-bot-message: #f1f5f9; 
+        --bg-input-container: #0f172a; 
+        --border-color: #1e293b; 
+        --bg-input: #1e293b; 
+        --text-input: #f8fafc; 
+        --bg-send-button: #3b82f6; 
+        --bg-send-button-hover: #2563eb; 
+        --bg-option-button: #1e293b; 
+        --text-option-button: #93c5fd; 
+        --bg-option-button-hover: #334155; 
+        --minimized-bg: #3b82f6;
+        --minimized-icon-color: #ffffff;
+    }
+
+    #hb-widget-wrapper ::-webkit-scrollbar { width: 4px; }
+    #hb-widget-wrapper ::-webkit-scrollbar-track { background: transparent; }
+    #hb-widget-wrapper ::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 10px; }
+
+    #hb-widget-wrapper .chatbot-container { position: fixed; bottom: 24px; right: 24px; z-index: 2147483647; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    #hb-widget-wrapper .chatbot { width: 360px; max-width: 90vw; height: 600px; max-height: 85vh; border-radius: 24px; background-color: var(--bg-chatbot); box-shadow: var(--shadow-chatbot); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color); }
+    
+    #hb-widget-wrapper .chatbot.minimized { width: auto; height: auto; border-radius: 0; background: transparent; box-shadow: none; border: none; overflow: visible; }
+    #hb-widget-wrapper .chatbot.minimized > :not(.chatbot-header) { display: none; }
+    #hb-widget-wrapper .chatbot.minimized .chatbot-header { background: transparent; padding: 0; border: none; box-shadow: none; overflow: visible; }
+    #hb-widget-wrapper .chatbot.minimized .chatbot-header span, #hb-widget-wrapper .chatbot.minimized .header-controls > :not(.minimize-button) { display: none; }
+
+    #hb-widget-wrapper .chatbot-header { background: var(--bg-header); color: var(--text-header); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    #hb-widget-wrapper .chatbot-header span { font-weight: 600; font-size: 1.05em; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px;}
+    #hb-widget-wrapper .header-controls { display: flex; align-items: center; gap: 10px; }
+    #hb-widget-wrapper .header-button { background: none; border: none; color: var(--text-header); font-size: 1.2em; cursor: pointer; opacity: 0.8; transition: 0.2s ease; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 8px; outline: none; -webkit-tap-highlight-color: transparent;}
+    #hb-widget-wrapper .header-button:hover { opacity: 1; transform: scale(1.1); }
+
+    @keyframes hbPulseAttention {
+        0%, 85% { transform: scale(1); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        92% { transform: scale(1.12); box-shadow: 0 0 20px rgba(15, 23, 42, 0.4); }
+        100% { transform: scale(1); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    }
+
+    #hb-widget-wrapper .chatbot.minimized .minimize-button.header-button { 
+        padding: 0; display: flex; align-items: center; justify-content: center;
+        color: var(--minimized-icon-color); background-color: var(--minimized-bg); 
+        border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+        width: 60px; height: 60px; min-width: 60px; min-height: 60px; flex-shrink: 0; 
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: hbPulseAttention 5s infinite ease-in-out; -webkit-tap-highlight-color: transparent; outline: none;
+    }
+    #hb-widget-wrapper .chatbot.minimized .minimize-button.header-button:hover { transform: scale(1.08); animation: none; background-color: var(--minimized-bg); }
+    #hb-widget-wrapper .chatbot.minimized .minimize-button.header-button svg { width: 28px; height: 28px; fill: var(--minimized-icon-color); flex-shrink: 0; }
+
+    #hb-widget-wrapper .settings-panel { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; background-color: var(--bg-chatbot); display: flex; gap: 8px; padding: 0 16px; border-bottom: 1px solid var(--border-color); }
+    #hb-widget-wrapper .settings-panel.open { max-height: 60px; padding: 12px 16px; overflow: visible; }
+    #hb-widget-wrapper .settings-btn { background: var(--bg-input); color: var(--text-bot-message); border: none; border-radius: 8px; padding: 8px; flex: 1; font-size: 0.8em; font-weight: 500; cursor: pointer; transition: 0.2s ease; outline: none; }
+    #hb-widget-wrapper .settings-btn:hover { filter: brightness(0.95); transform: translateY(-1px); }
+
+    #hb-widget-wrapper .chat-display { flex: 1; overflow-y: auto; padding: 16px; background-color: var(--bg-chat-display); display: flex; flex-direction: column; }
+    #hb-widget-wrapper .message-row { display: flex; align-items: flex-end; margin-bottom: 16px; max-width: 92%; animation: hbSlideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @keyframes hbSlideUp { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+    #hb-widget-wrapper .user-row { align-self: flex-end; flex-direction: row-reverse; }
+    #hb-widget-wrapper .bot-row { align-self: flex-start; }
+    #hb-widget-wrapper .avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em; flex-shrink: 0; box-shadow: var(--shadow-soft); }
+    #hb-widget-wrapper .bot-avatar { background: var(--bg-header); color: white; margin-right: 8px; }
+    #hb-widget-wrapper .user-avatar { background: var(--border-color); margin-left: 8px; }
+    #hb-widget-wrapper .message-bubble { display: flex; flex-direction: column; }
+    #hb-widget-wrapper .chat-display p { margin: 0; padding: 10px 14px; border-radius: 18px; line-height: 1.4; font-size: 0.9em; box-shadow: var(--shadow-soft); white-space: pre-wrap; }
+    #hb-widget-wrapper .user-message { background: var(--bg-user-message); color: var(--text-user-message); border-bottom-right-radius: 4px !important; }
+    #hb-widget-wrapper .bot-message { background: var(--bg-bot-message); color: var(--text-bot-message); border-bottom-left-radius: 4px !important; border: 1px solid var(--border-color); }
+
+    #hb-widget-wrapper .typing-dots { display: flex; padding: 12px 16px; background: var(--bg-bot-message); border: 1px solid var(--border-color); border-radius: 18px; border-bottom-left-radius: 4px; width: max-content; }
+    #hb-widget-wrapper .typing-dots span { width: 5px; height: 5px; background-color: var(--text-bot-message); border-radius: 50%; margin: 0 2px; animation: hbBounce 1.4s infinite ease-in-out both; opacity: 0.6; }
+    #hb-widget-wrapper .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+    #hb-widget-wrapper .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes hbBounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+    #hb-widget-wrapper .chat-input-container { background-color: var(--bg-input-container); padding: 12px 16px 16px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; }
+    #hb-widget-wrapper .button-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    #hb-widget-wrapper .button-options button.text-btn { background-color: var(--bg-option-button); color: var(--text-option-button); border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.85em; font-weight: 500; transition: 0.2s ease; outline: none;}
+    #hb-widget-wrapper .button-options button.text-btn:hover:not(:disabled) { background-color: var(--bg-option-button-hover); transform: translateY(-2px); }
+    #hb-widget-wrapper .button-options button.icon-btn { width: 40px; height: 40px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s ease; outline: none; box-shadow: var(--shadow-soft); }
+    #hb-widget-wrapper .button-options button.icon-btn svg { width: 20px; height: 20px; fill: #ffffff; }
+    #hb-widget-wrapper .button-options button.icon-btn:hover:not(:disabled) { transform: scale(1.1); filter: brightness(1.1); }
+    #hb-widget-wrapper .button-options button:disabled { background-color: var(--border-color) !important; cursor: not-allowed; box-shadow: none; opacity: 0.6; transform: none !important; }
+    #hb-widget-wrapper .button-options button:disabled svg { fill: #94a3b8 !important; }
+
+    #hb-widget-wrapper .chat-input { display: flex; align-items: center; gap: 8px; }
+    #hb-widget-wrapper .chat-input input { flex: 1; border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-input); padding: 12px 16px; border-radius: 24px; font-size: 0.9em; outline: none; transition: 0.3s ease; }
+    #hb-widget-wrapper .chat-input input:focus { border-color: var(--bg-send-button); box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); }
+    #hb-widget-wrapper .chat-input button.send-btn { background-color: var(--bg-send-button); color: var(--text-send-button); border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s ease; outline: none; flex-shrink: 0;}
+    #hb-widget-wrapper .chat-input button.send-btn svg { width: 18px; height: 18px; fill: currentColor; margin-left: 2px; }
+    #hb-widget-wrapper .chat-input button.send-btn:hover { transform: scale(1.05); }
+
+    @media (max-width: 768px) {    
+        #hb-widget-wrapper .chatbot-container { bottom: 16px; right: 16px; }
+        #hb-widget-wrapper .chatbot { width: calc(100vw - 32px); height: 80vh; border-radius: 20px; }
+    }
+    </style>
+
+    <div class="chatbot-container" id="hb-chatbotContainer">    
+        <div class="chatbot minimized" id="hb-chatbot">        
+            <div class="chatbot-header" id="hb-chatbotHeader">            
+                <span><span id="hb-botAvatarTitle"></span> <span id="hb-botNameTitle">Ministify Concierge</span></span>            
+                <div class="header-controls">                
+                    <button id="hb-settingsBtn" class="header-button" title="Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>                
+                    <button id="hb-minimizeBtn" class="minimize-button header-button" title="Minimize/Maximize"></button>            
+                </div>        
+            </div>  
+            
+            <div class="settings-panel" id="hb-settingsPanel">
+                <button class="settings-btn" id="hb-themeToggleBtn">Dark Mode</button>                
+                <button class="settings-btn" id="hb-muteToggleBtn">Mute Sounds</button>
+                <button class="settings-btn" id="hb-clearChatBtn">Clear Chat</button>
+            </div>
+
+            <div class="chat-display" id="hb-chatDisplay"></div>        
+            
+            <div class="chat-input-container">            
+                <div class="button-options" id="hb-buttonOptions"></div>            
+                <div class="chat-input">                
+                    <input type="text" id="hb-userInput" placeholder="Ask a question...">                
+                    <button class="send-btn" id="hb-sendBtn" title="Send">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                    </button>            
+                </div>        
+            </div>    
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const BUSINESS_NAME = "Ministify"; 
+        const BOT_AVATAR_EMOJI = "⚡"; 
+
+        const OFFICE_HOURS = {
+            timezone: 'Asia/Manila', 
+            workingDays: [1, 2, 3, 4, 5, 6], 
+            startHour: 8,  
+            endHour: 17    
+        };
+
+        const SVGS = {
+            whatsapp: `<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg>`,
+            gmail: `<svg viewBox="0 0 24 24"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"></path></svg>`,
+            phone: `<svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"></path></svg>`,
+            messenger: `<svg viewBox="0 0 24 24"><path d="M12 2C6.36 2 2 6.13 2 11.7c0 3.19 1.63 6.02 4.14 7.85v4.45l4.08-2.26c1.16.32 2.41.5 3.72.5 5.64 0 10-4.13 10-9.7C24 6.13 19.64 2 12 2zm1.09 13.06l-2.79-2.98-5.44 2.98 5.96-6.33 2.87 2.98 5.35-2.98-5.95 6.33z"></path></svg>`
+        };
+
+        const predefinedResponses = [
+            {
+                patterns: [/hello|hi|hey|start|menu/i],
+                keywords: ["hello", "hi", "menu", "start"],
+                responses: [`Hi there! Welcome to ${BUSINESS_NAME}. If you got any concern, I'm just a tap away. How can I assist you today?`],
+                suggestions: [{ text: "🚀 What We Do" }, { text: "💻 Hardware Rescue" }, { text: "💸 Pricing & Savings" }, { text: "📞 Contact Us" }]
+            },
+            {
+                patterns: [/what do you do|what is ministify|about/i],
+                keywords: ["about", "ministify", "what", "do"],
+                responses: ["Ministify LLC liberates organizations from expensive software licenses and planned hardware obsolescence. We deliver a unified, integrated tech stack powered by Google Cloud, open-source Linux, and privacy-first AI."],
+                suggestions: [{ text: "🧠 AI & Ecosystem" }, { text: "💻 Hardware Rescue" }, { text: "Main Menu" }]
+            },
+            {
+                patterns: [/ecosystem|layers|ai models|gemini|claude|chatgpt/i],
+                keywords: ["ecosystem", "layers", "models", "gemini", "claude", "chatgpt"],
+                responses: ["Our ecosystem has 5 layers: Google Infra, Linux Systems, AI Implementation, Web Services, and Tech Education.\n\nFor AI, we support Gemini, Claude, ChatGPT, Perplexity, DeepSeek, and Grok. Need complete privacy? We deploy local on-device AI via Ollama and LM Studio."],
+                suggestions: [{ text: "💸 Pricing & Savings" }, { text: "Main Menu" }]
+            },
+            {
+                patterns: [/hardware|mac|windows|rescue|obsolete/i],
+                keywords: ["hardware", "mac", "windows", "rescue", "obsolete"],
+                responses: ["We bypass planned obsolescence! By replacing sluggish, locked-down operating systems with modern Linux or ChromeOS Flex, we extend the life of \"obsolete\" Intel Macs and PCs by 5 to 10 years."],
+                suggestions: [{ text: "💸 Pricing & Savings" }, { text: "Main Menu" }]
+            },
+            {
+                patterns: [/price|cost|quote|how much|pricing|savings/i],
+                keywords: ["price", "cost", "quote", "pricing", "savings", "much"],
+                responses: ["Stop paying the Hardware Tax! You can save ~₱30k per PC or ~₱50k per Mac by not replacing them, plus eliminate monthly SaaS fees.\n\nOur Base Migration (ChromeOS Flex) starts at ₱1,500/device. Advanced setups (Ubuntu/Mint) are ₱2,500/device. Team onboarding sessions are ₱5,000/session."],
+                suggestions: [{ text: "📞 Contact Us" }, { text: "Main Menu" }]
+            },
+            {
+                patterns: [/location|where|address/i],
+                keywords: ["location", "where", "address", "map"],
+                responses: ["Our head office is in Cagayan de Oro, with operations in Catarman, Northern Mindanao. However, we serve clients digitally across the globe!"],
+                suggestions: [{ text: "📞 Contact Us" }, { text: "Main Menu" }]
+            },
+            {
+                patterns: [/contact|phone|email|call|number/i],
+                keywords: ["contact", "phone", "email", "call", "number"],
+                responses: ["You can reach us directly through any of the channels below. Phone and WhatsApp are actively monitored during office hours."],
+                suggestions: [
+                    { iconOnly: true, svg: SVGS.phone, action: "call", url: "tel:+639161469193", color: "#10b981", title: "Call/SMS: 09161469193" },
+                    { iconOnly: true, svg: SVGS.whatsapp, action: "call", url: "https://wa.me/639957522922", color: "#25D366", title: "WhatsApp: 09957522922" },
+                    { iconOnly: true, svg: SVGS.messenger, action: "link", url: "https://m.me/100129911648927", color: "#00B2FF", title: "Messenger" },
+                    { iconOnly: true, svg: SVGS.gmail, action: "link", url: "mailto:ministify@gmail.com", color: "#EA4335", title: "Gmail" }
+                ]
+            },
+            {
+                patterns: [/thank|thx|thanks|appreciate|ok|okay|awesome|great|bye|goodbye/i],
+                keywords: ["thank", "thanks", "okay", "awesome", "great", "bye", "goodbye"],
+                responses: ["You're very welcome! Let me know if there's anything else I can help you with."],
+                suggestions: [{ text: "Main Menu" }]
+            }
+        ];
+
+        const FALLBACK_RESPONSE = "I'm a simple automated assistant, so I might not understand that. Please select an option below to learn more!";
+        const FALLBACK_SUGGESTIONS = [ { text: "🚀 What We Do" }, { text: "📞 Contact Us" } ];
+
+        function levenshtein(a, b) {
+            const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function getBotResponse(message) { 
+            const rawMessage = message.trim();
+            const cleanedMessage = rawMessage.toLowerCase(); 
+            
+            for (const item of predefinedResponses) { 
+                if (item.patterns.some(p => p.test(cleanedMessage))) {
+                    return { response: item.responses[0], suggestions: item.suggestions };
+                }
+            } 
+            
+            const words = cleanedMessage.replace(/[^\w\s]/g, '').split(/\s+/);
+            for (const word of words) {
+                if (word.length < 3) continue; 
+                for (const item of predefinedResponses) {
+                    if (!item.keywords) continue;
+                    for (const keyword of item.keywords) {
+                        const allowedTypos = keyword.length > 5 ? 2 : 1;
+                        if (levenshtein(word, keyword) <= allowedTypos) {
+                            return { response: item.responses[0], suggestions: item.suggestions };
+                        }
+                    }
+                }
+            }
+            return { response: FALLBACK_RESPONSE, suggestions: FALLBACK_SUGGESTIONS }; 
+        }
+
+        const wrapper = document.getElementById('hb-widget-wrapper');
+        const chatbot = document.getElementById('hb-chatbot');
+        const chatDisplay = document.getElementById('hb-chatDisplay');
+        const buttonOptions = document.getElementById('hb-buttonOptions');
+        const userInput = document.getElementById('hb-userInput');
+        const sendBtn = document.getElementById('hb-sendBtn');
+        const minimizeBtn = document.getElementById('hb-minimizeBtn');
+        const settingsBtn = document.getElementById('hb-settingsBtn');
+        const settingsPanel = document.getElementById('hb-settingsPanel');
+        const themeToggleBtn = document.getElementById('hb-themeToggleBtn');
+        const muteToggleBtn = document.getElementById('hb-muteToggleBtn');
+        const clearChatBtn = document.getElementById('hb-clearChatBtn');
+        const messageReceivedSound = new Audio('https://www.fesliyanstudios.com/play-mp3/5455');
+
+        let isMinimized = true;
+        let isMuted = localStorage.getItem('hb_chatMuted') === 'true';
+        let isDarkMode = localStorage.getItem('hb_chatDarkMode') === 'true';
+
+        const MINIMIZED_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.92 2 10.75c0 2.8 1.54 5.3 3.93 6.91L5 22l4.43-2.16c.82.23 1.69.36 2.57.36 5.52 0 10-3.92 10-8.75S17.52 2 12 2z"></path></svg>`;
+        const MAXIMIZED_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+
+        document.getElementById('hb-botNameTitle').textContent = BUSINESS_NAME;
+        document.getElementById('hb-botAvatarTitle').textContent = BOT_AVATAR_EMOJI;
+        
+        if(isDarkMode) wrapper.classList.add('hb-dark-mode');
+        themeToggleBtn.textContent = isDarkMode ? "Light Mode" : "Dark Mode";
+        muteToggleBtn.textContent = isMuted ? "Unmute Sounds" : "Mute Sounds";
+
+        function isOfficeOpen() {
+            const now = new Date();
+            let localTimeStr = now.toLocaleString('en-US', { timeZone: OFFICE_HOURS.timezone });
+            
+            // Fix the formatting bug: Replace Narrow No-Break Space (\u202F) with a standard space
+            localTimeStr = localTimeStr.replace(/\u202F/g, ' ');
+            
+            const localTime = new Date(localTimeStr);
+            
+            // Safeguard: If the browser still fails to parse the date, default to OPEN so you don't lose leads
+            if (isNaN(localTime.getTime())) {
+                return true; 
+            }
+            
+            const day = localTime.getDay(); 
+            const hour = localTime.getHours(); 
+            
+            return OFFICE_HOURS.workingDays.includes(day) && hour >= OFFICE_HOURS.startHour && hour < OFFICE_HOURS.endHour;
+        }
+
+        function addMessage(text, type, animate = true) { 
+            const row = document.createElement('div');
+            row.className = `message-row ${type}-row`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `avatar ${type}-avatar`;
+            avatar.innerHTML = type === 'bot' ? BOT_AVATAR_EMOJI : '👤';
+
+            const bubbleContainer = document.createElement('div');
+            bubbleContainer.className = 'message-bubble';
+
+            const msgElement = document.createElement('p'); 
+            msgElement.className = type === 'user' ? 'user-message' : 'bot-message'; 
+            
+            row.appendChild(avatar);
+            row.appendChild(bubbleContainer);
+
+            if (type === 'bot' && animate) { 
+                const typingIndicator = document.createElement('div'); 
+                typingIndicator.className = 'typing-dots'; 
+                typingIndicator.innerHTML = '<span></span><span></span><span></span>'; 
+                
+                bubbleContainer.appendChild(typingIndicator); 
+                chatDisplay.appendChild(row); 
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                
+                setTimeout(() => {
+                    bubbleContainer.replaceChild(msgElement, typingIndicator);
+                    msgElement.textContent = text;
+                    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                    if (!isMuted) messageReceivedSound.play().catch(()=>{});
+                }, 800);
+            } else { 
+                msgElement.textContent = text; 
+                bubbleContainer.appendChild(msgElement); 
+                chatDisplay.appendChild(row); 
+                if(!animate) chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            } 
+        }
+
+        function updateButtonOptions(suggestions) { 
+            buttonOptions.innerHTML = ''; 
+            const currentlyOpen = isOfficeOpen();
+
+            (suggestions || []).forEach(suggestion => { 
+                const btn = document.createElement('button'); 
+                const isIcon = typeof suggestion === 'object' && suggestion.iconOnly;
+                
+                if (isIcon) {
+                    btn.className = 'icon-btn';
+                    btn.innerHTML = suggestion.svg;
+                    btn.style.backgroundColor = suggestion.color;
+                    btn.title = suggestion.title || "Contact Link";
+                    
+                    if (suggestion.action === 'call' && !currentlyOpen) {
+                        btn.disabled = true;
+                        btn.title = "Our phone lines are currently closed.";
+                        btn.style.backgroundColor = ""; 
+                    } else {
+                        btn.onclick = () => window.open(suggestion.url, '_blank');
+                    }
+                } 
+                else {
+                    const text = typeof suggestion === 'string' ? suggestion : suggestion.text;
+                    btn.className = 'text-btn';
+                    btn.textContent = text; 
+                    btn.onclick = () => handleUserInput(text); 
+                }
+                
+                buttonOptions.appendChild(btn); 
+            }); 
+        }
+
+        function processQuery(message) { 
+            buttonOptions.innerHTML = ''; 
+            const { response, suggestions } = getBotResponse(message); 
+            addMessage(response, 'bot', true); 
+            setTimeout(() => updateButtonOptions(suggestions), 800);
+        }
+
+        function handleUserInput(text = userInput.value.trim()) {
+            if (!text) return;
+            addMessage(text, 'user', false); 
+            userInput.value = ''; 
+            processQuery(text); 
+        }
+
+        function setChatbotState(minimized) {    
+            isMinimized = minimized;    
+            chatbot.classList.toggle("minimized", isMinimized);    
+            settingsPanel.classList.remove('open');
+            
+            if (isMinimized) {        
+                minimizeBtn.innerHTML = MINIMIZED_ICON_SVG;
+            } else {        
+                minimizeBtn.innerHTML = MAXIMIZED_ICON_SVG;        
+                setTimeout(() => chatDisplay.scrollTop = chatDisplay.scrollHeight, 50);    
+            }
+        }
+
+        sendBtn.onclick = () => handleUserInput();
+        userInput.onkeypress = (e) => { if (e.key === 'Enter') handleUserInput(); };
+        minimizeBtn.onclick = (e) => { e.stopPropagation(); setChatbotState(!isMinimized); };
+        document.getElementById('hb-chatbotHeader').onclick = (e) => { 
+            if (e.target.closest('#hb-minimizeBtn') || e.target.closest('#hb-settingsBtn')) return;
+            setChatbotState(!isMinimized); 
+        };
+
+        settingsBtn.onclick = (e) => {
+            e.stopPropagation();
+            settingsPanel.classList.toggle('open');
+        };
+
+        themeToggleBtn.onclick = () => {
+            isDarkMode = !isDarkMode;
+            wrapper.classList.toggle('hb-dark-mode', isDarkMode);
+            themeToggleBtn.textContent = isDarkMode ? "Light Mode" : "Dark Mode";
+            localStorage.setItem('hb_chatDarkMode', isDarkMode);
+        };
+
+        muteToggleBtn.onclick = () => {
+            isMuted = !isMuted;
+            muteToggleBtn.textContent = isMuted ? "Unmute Sounds" : "Mute Sounds";
+            localStorage.setItem('hb_chatMuted', isMuted);
+        };
+
+        clearChatBtn.onclick = () => {
+            chatDisplay.innerHTML = '';
+            settingsPanel.classList.remove('open');
+            processQuery("hello");
+        };
+
+        // --- Flash Open Logic ---
+        const hasFlashed = sessionStorage.getItem('hb_flashed');
+
+        if (!hasFlashed) {
+            setChatbotState(true); 
+            setTimeout(() => {
+                setChatbotState(false); 
+                processQuery("hello"); 
+                
+                setTimeout(() => {
+                    if (!isMinimized) { 
+                        setChatbotState(true); 
+                    }
+                }, 4000); 
+                
+                sessionStorage.setItem('hb_flashed', 'true');
+            }, 1000); 
+        } else {
+            setChatbotState(true);
+        }
+        
+        document.getElementById('hb-chatbotHeader').addEventListener('click', function initOnce() {
+            if(chatDisplay.children.length === 0) processQuery("hello");
+            document.getElementById('hb-chatbotHeader').removeEventListener('click', initOnce);
+        });
+
+    })(); 
+    </script>
+</div>
+<!-- End of HashBro Business Concierge Widget -->
